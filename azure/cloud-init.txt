@@ -1,0 +1,16 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+
+runcmd:
+  - echo "Starting bootstrap tasks..."
+  - curl -sL https://deb.nodesource.com/setup_22.19.0 | sudo -E bash -
+  - sudo apt install -y nodejs
+  - git clone https://github.com/dhruv0503/bigChatApp.git /home/adminuser/app
+  - cd /home/adminuser/app
+  - npm install
+  - npm run start
+  - echo "Bootstrap complete!"
