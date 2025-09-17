@@ -1,17 +1,13 @@
+variable "rg_name" {
+    description = "Name of the resource group"
+    type = string
+}
+
 variable "location" {
     description = "Region where resources will be created"
     type = string
 }
 
-variable "address_space" {
-    description = "The address space that is used by the virtual network."
-    type = list(string)
-}
-
-variable "rg_name" {
-    description = "Name of the resource group"
-    type = string
-}
 variable "vm_size" {
     description = "Size of the VM"
     type = string
@@ -62,22 +58,12 @@ variable "bootstrap_file_address" {
     type = string
 }
 
-variable "public_ip_allocation_method" {
-    description = "Public IP allocation method"
+variable "subnet_id" {
+    description = "The ID of the subnet."
     type = string
 }
 
-variable "public_ip_sku" {
-    description = "Public IP SKU"
-    type = string
-}
-
-variable "subnet_address_prefix" {
-    description = "The address prefix to use for the subnet."
-    type = list(string)
-}
-
-variable "ssh_source_address_prefix" {
-    description = "The source address prefix for SSH access."
+variable "public_ip" {
+    description = "The Public IP for the VM."
     type = string
 }

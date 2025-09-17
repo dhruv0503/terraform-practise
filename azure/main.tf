@@ -16,83 +16,47 @@ resource "azurerm_resource_group" "example" {
   location = var.location
 }
 
-resource "azurerm_virtual_network" "example_network" {
-  name                = "example-network"
-  address_space       = var.address_space
-  location            = azurerm_resource_group.example.location
-  resource_group_name = azurerm_resource_group.example.name
-}
-
-resource "azurerm_subnet" "example_subnet" {
-  name                 = "example-subnet"
-  resource_group_name  = azurerm_resource_group.example.name
-  virtual_network_name = azurerm_virtual_network.example_network.name
-  address_prefixes     = ["10.0.1.0/24"]
-}
-
-resource "azurerm_network_security_group" "example_nsg" {
-    name = "example-nsg"
-    location = var.location
-    resource_group_name = azurerm_resource_group.example.name
-
-    security_rule {
-        name = "allow-ssh"
-        priority = 100
-        direction = "Inbound"
-        access = "Allow"
-        protocol = "Tcp"
-        source_port_range = "*"
-        destination_port_range = "22"
-        source_address_prefix = "*" 
-        destination_address_prefix = "*"
-    }
-}
-
-resource "azurerm_subnet_network_security_group_association" "example_assocation"{
-    subnet_id = azurerm_subnet.example_subnet.id
-    network_security_group_id = azurerm_network_security_group.example_nsg.id
-}
-
 resource "azurerm_public_ip" "example_public_ip"{
     name = "example-public-ip"
     resource_group_name = azurerm_resource_group.example.name
     location = var.location
-    allocation_method = "Static"
-    sku = "Standard"
+    allocation_method = var.public_ip_allocation_method
+    sku = var.public_ip_sku
 }
 
-resource "azurerm_network_interface" "example_network_interface" {
-  name                = "example_network_interface"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.example.name
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.example_subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id = azurerm_public_ip.example_public_ip.id
-  }
+module "network" {
+  source = "./modules/network"
+  address_space = var.address_space
+  rg_name = azurerm_resource_group.example.name
+  location = azurerm_resource_group.example.location
+  subnet_address_prefix = var.subnet_address_prefix
+  ssh_source_address_prefix = var.ssh_source_address_prefix
 }
 
-resource "azurerm_linux_virtual_machine" "example_machine" {
-  name                  = "test-VM"
-  resource_group_name   = azurerm_resource_group.example.name
-  location              = var.location
-  network_interface_ids = [azurerm_network_interface.example_network_interface.id]
-  size                  = "Standard_F2"
-  admin_username        = "adminuser"
-  admin_ssh_key {
-    username = "adminuser"
-    public_key = file("~/.ssh/id_rsa.pub")
-  }
-  os_disk {
-    caching = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-  custom_data = filebase64("./cloud-init.txt")
+module "virtual_machine" {
+  source = "./modules/virtual_machine"
+  rg_name = azurerm_resource_group.example.name
+  location = azurerm_resource_group.example.location
+  subnet_id = module.network.subnet_id
+  public_ip = azurerm_public_ip.example_public_ip.id
+  vm_size = var.vm_size
+  admin_username = var.admin_username
+  ssh_public_key_path = var.ssh_public_key_path
+  os_disk_caching = var.os_disk_caching
+  os_disk_storage_account_type = var.os_disk_storage_account_type
+  source_image_offer = var.source_image_offer
+  source_image_publisher = var.source_image_publisher
+  source_image_sku = var.source_image_sku
+  source_image_version = var.source_image_version
+  bootstrap_file_address = var.bootstrap_file_address
 }
+
+
+# resource "azurerm_managed_disk" "example_disk" {
+#   name                 = "example-disk"
+#   location             = var.location
+#   resource_group_name  = azurerm_resource_group.example.name
+#   storage_account_type = "Standard_LRS"
+#   create_option        = "Empty"
+#   disk_size_gb        = 10
+# }
