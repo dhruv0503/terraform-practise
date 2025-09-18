@@ -1,33 +1,32 @@
 provider "aws" {
-  region = var.aws_region
+    region = var.aws_region
 }
 
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
+resource "aws_key_pair" "keypair" {
+    key_name = "demo-key"
+    public_key = file("~/.ssh/id_rsa.pub")
 }
 
-resource "aws_s3_bucket" "demo_bucket" {
-  bucket = var.bucket_name
-
-  tags = {
-    Name        = "DemoBucket"
-    Environment = "Dev"
-  }
+module "network" {
+    source = "./modules/network"
+    vpc_cidr = "10.0.0.0/20"
+    public_subnet_cidr = "10.0.1.0/24"
+    private_subnet_cidr = "10.0.2.0/24"
+    lb_public_subnet_cidr = "10.0.3.0/24"
 }
 
-resource "aws_instance" "terraform_demo_ec2_instance" {
-    ami           = data.aws_ami.amazon_linux.id
-    instance_type = var.instance_type
-    
-    tags = {
-        Name        = "TerraformDemoEC2Instance"
-        Environment = "Dev"
-    }
+module "instance" {
+    source = "./modules/instance"
+    instance_ami = "ami-0e35ddab05955cf57"
+    vpc_id = module.network.vpc_id
+    public_subnet_id = module.network.public_subnet
+    private_subnet_id = module.network.private_subnet
+    ssh_cidr = ["182.69.181.105/32"]
+    instance_type = "t2.micro"
+    lb_public_subnet_id = module.network.lb_public_subnet
+    key_pair_name = aws_key_pair.keypair.key_name
 }
 
+output "instance_public_ip" {
+    value = module.network.public_ip
+}
