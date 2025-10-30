@@ -33,6 +33,18 @@ module "network" {
   ssh_source_address_prefix = var.ssh_source_address_prefix
 }
 
+module "storage" {
+  source = "./modules/storage"
+  rg_name = azurerm_resource_group.example.name
+  location = var.location
+  storage_account_tier = var.storage_account_type
+  storage_replication_tier = var.storage_replication_tier
+  sample_file_path = var.sample_file_path
+  subnet_id = module.network.subnet_id
+
+  depends_on = [module.network]
+}
+
 module "virtual_machine" {
   source = "./modules/virtual_machine"
   rg_name = azurerm_resource_group.example.name
@@ -49,14 +61,7 @@ module "virtual_machine" {
   source_image_sku = var.source_image_sku
   source_image_version = var.source_image_version
   bootstrap_file_address = var.bootstrap_file_address
+  storage_account_name = module.storage.storage_account_name
+  storage_account_key  = module.storage.storage_account_key
+  file_share_name      = module.storage.file_share_name
 }
-
-
-# resource "azurerm_managed_disk" "example_disk" {
-#   name                 = "example-disk"
-#   location             = var.location
-#   resource_group_name  = azurerm_resource_group.example.name
-#   storage_account_type = "Standard_LRS"
-#   create_option        = "Empty"
-#   disk_size_gb        = 10
-# }

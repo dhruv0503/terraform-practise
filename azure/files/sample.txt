@@ -1,0 +1,2 @@
+Hello Azure Storage Account
+Hi Terraform

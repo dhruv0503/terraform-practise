@@ -31,5 +31,9 @@ resource "azurerm_linux_virtual_machine" "example_machine" {
     sku       = var.source_image_sku
     version   = var.source_image_version
   }
-  custom_data = filebase64(var.bootstrap_file_address)
+  custom_data = base64encode(templatefile(var.bootstrap_file_address, {
+    storage_account_name = var.storage_account_name
+    storage_account_key  = var.storage_account_key
+    file_share_name      = var.file_share_name
+  }))
 }

@@ -81,3 +81,18 @@ variable "ssh_source_address_prefix" {
     description = "The source address prefix for SSH access."
     type = string
 }
+
+variable "storage_account_type" {
+  description = "The type of storage account to create."
+  type        = string
+}
+
+variable "storage_replication_tier" {
+  description = "Tier of replication of data in storage account"
+  type = string
+}
+
+variable "sample_file_path" {
+  description = "Path to the sample file for blob storage"
+  type = string
+}

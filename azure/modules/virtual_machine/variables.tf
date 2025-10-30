@@ -67,3 +67,18 @@ variable "public_ip" {
     description = "The Public IP for the VM."
     type = string
 }
+
+variable "storage_account_name" {
+    description = "The name of the storage account"
+    type = string
+}
+
+variable "storage_account_key" {
+    description = "The access key of the storage account"
+    type = string 
+}
+
+variable "file_share_name" {
+    description = "The name of the file share"
+    type = string
+}
